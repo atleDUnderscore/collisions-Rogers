@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using StarterAssets;
 
 public class Player : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class Player : MonoBehaviour
     //Refs
     [SerializeField] TMP_Text scoreText;
     [SerializeField] TMP_Text healthText;
+    [SerializeField] GameObject winLosePanel;
+    [SerializeField] TMP_Text winLoseText;
 
     public int Health
     { get { return health; } set { health = value; } }
@@ -22,6 +25,14 @@ public class Player : MonoBehaviour
     {
         score += addedScore;
         scoreText.text = "Score: " + score.ToString();
+        if(score >= 100)
+        {
+            winLosePanel.SetActive(true);
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            this.gameObject.GetComponent<FirstPersonController>().enabled = false;
+            winLoseText.text = "You Win!";
+        }
         
     }
 
@@ -29,6 +40,14 @@ public class Player : MonoBehaviour
     {
         health -= minusHealth;
         healthText.text = "Health: " + health.ToString();
+        if(health <= 0)
+        {
+            winLosePanel.SetActive(true);
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+            this.gameObject.GetComponent<FirstPersonController>().enabled = false;
+            winLoseText.text = "You Died";
+        }
 
     }
 
@@ -38,18 +57,35 @@ public class Player : MonoBehaviour
         healthText.text = "Health: 40";
         score = 0;
         health = 40;
+        winLosePanel.SetActive(false);
+        this.gameObject.GetComponent<FirstPersonController>().enabled = true;
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
     }
 
-    private void FixedUpdate()
+    private void Update()
     {
-        if(Input.GetKey(KeyCode.E))
+        if(Input.GetKeyUp(KeyCode.E))
         {
-            RaycastHit hit;
-            if (Physics.Raycast(transform.position, transform.TransformDirection(Vector3.forward), out hit, Mathf.Infinity) && hit.gameObject.tag == "Trap")
-            {
-                Debug.DrawRay(transform.position, transform.TransformDirection(Vector3.forward) * hit.distance, Color.yellow);
-            }
-
+            MineInteract();
         }
+    }
+
+    void MineInteract()
+    {
+        Vector3 playerPos = transform.position;
+        Vector3 forwardDir = transform.forward;
+
+        Ray interactRay = new Ray(playerPos, forwardDir);
+        RaycastHit hit;
+        float rayLength = 10f;
+        bool didHit = Physics.Raycast(interactRay, out hit, rayLength);
+        if(didHit && hit.transform.CompareTag("Trap"))
+        {
+            Debug.Log("Hit :)");
+            Destroy(hit.transform.gameObject);
+        }
+
+
     }
 }
